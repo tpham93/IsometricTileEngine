@@ -95,11 +95,6 @@ namespace Isometric.TileEngine
         /// </summary>
         private List<int> indices;
 
-        /// <summary>
-        /// the coordinates on the map of the tile
-        /// </summary>
-        private Point coordinates;
-
 
 
 
@@ -112,8 +107,8 @@ namespace Isometric.TileEngine
         /// </summary>
         /// <param name="typeIndex">the tiles typeIndex</param>
         /// <param name="coordinates">the tiles coordinates on the map</param>
-        public Tile(int typeIndex, Point coordinates)
-            : this(typeIndex, new List<int>(), coordinates)
+        public Tile(int typeIndex)
+            : this(typeIndex, new List<int>())
         {
         }
 
@@ -124,24 +119,22 @@ namespace Isometric.TileEngine
         /// <param name="position">the tiles worldposition</param>
         /// <param name="typeIndex">the tiles typeIndex</param>
         /// <param name="indices">the texture indices</param>
-        public Tile(int typeIndex, List<int> indices, Point coordinates)
+        public Tile(int typeIndex, List<int> indices)
         {
             this.typeIndex = typeIndex;
             this.indices = indices;
-            this.coordinates = coordinates;
         }
 
 
         /// <summary>
         /// drawing the tile onto the screen
         /// </summary>
-        public void Draw(SpriteBatch spriteBatch)
+        /// <param name="spriteBatch">the spritebatch used to drawing this tile onto the rendertarget</param>
+        /// <param name="indices">the world coordinates of the tile</param>
+        public void Draw(SpriteBatch spriteBatch, Point coordinates)
         {
-            Vector2 pos = new Vector2(tileSize.X / 2f,0) + new Vector2(coordinates.X * tileOffset.X, coordinates.Y * tileOffset.Y);
-            if (coordinates.Y % 2 == 1)
-            {
-                pos += new Vector2(tileSize.X / 2f, 0);
-            }
+            Vector2 pos = coordinates.X * new Vector2(32, -16) + coordinates.Y * new Vector2(32,16);
+
             foreach(int index in indices)
             {
                 spriteBatch.Draw(tileTypeTextures[typeIndex][index],pos,null,Color.White,0f,textureOrigin,1,SpriteEffects.None,0f);

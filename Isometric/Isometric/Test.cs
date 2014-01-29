@@ -9,19 +9,19 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Isometric.TileEngine;
+using Isometric.GameComponents;
 
 namespace Isometric
 {
     public class Test
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
-
         Vector2 position;
 
         Tile[,] tiles;
 
+        Input input;
 
+        int rotationCounter;
 
         public Test()
         {
@@ -30,6 +30,9 @@ namespace Isometric
 
         public void Initialize()
         {
+            position = new Vector2(400,300);
+            input = new Input();
+            
             Tile.addType();
 
             tiles = new Tile[10, 10];
@@ -43,7 +46,7 @@ namespace Isometric
                     {
                         indices.Add(i);
                     }
-                    tiles[x, y] = new Tile(0,indices,new Point(x,y));
+                    tiles[x, y] = new Tile(0,indices);
                 }
             }
         }
@@ -62,23 +65,24 @@ namespace Isometric
 
         public void Update(GameTime gameTime)
         {
+            input.Update();
+
             Vector2 movement = new Vector2();
             KeyboardState keyboardState = Keyboard.GetState();
 
-            if (keyboardState.IsKeyDown(Keys.Left))
+            if (input.isKeyDown(Keys.A))
             {
                 movement += Vector2.UnitX;
             }
-
-            if (keyboardState.IsKeyDown(Keys.Right))
+            if (input.isKeyDown(Keys.D))
             {
                 movement -= Vector2.UnitX;
             }
-            if (keyboardState.IsKeyDown(Keys.Up))
+            if (input.isKeyDown(Keys.W))
             {
                 movement += Vector2.UnitY;
             }
-            if (keyboardState.IsKeyDown(Keys.Down))
+            if (input.isKeyDown(Keys.S))
             {
                 movement -= Vector2.UnitY;
             }
@@ -86,17 +90,58 @@ namespace Isometric
             movement *= 64 * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             position += movement;
+
+
+            if (input.keyClicked(Keys.Q))
+            {
+                rotationCounter += 1;
+                rotationCounter %= 4;
+            }
+            if (input.keyClicked(Keys.E))
+            {
+                rotationCounter += 3;
+                rotationCounter %= 4;
+            }
+
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, null, null, Matrix.CreateTranslation(new Vector3(position, 0)));
+            spriteBatch.Begin(SpriteSortMode.Immediate,
+                null,
+                null, 
+                null, 
+                null, 
+                null,
+                Matrix.CreateTranslation(new Vector3(position, 0)));
 
             for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
             {
-                for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
+                for (int x = tiles.GetUpperBound(0); x >= 0; --x)
                 {
-                    tiles[x, y].Draw(spriteBatch);
+                    int t_x = 0;
+                    int t_y = 0;
+                    switch (rotationCounter)
+                    {
+                        case 0:
+                            t_x = x;
+                            t_y = y;
+                            break;
+                        case 1:
+                            t_x = tiles.GetUpperBound(1) - y;
+                            t_y = tiles.GetUpperBound(0) - x;
+                            break;
+                        case 2:
+                            t_x = tiles.GetUpperBound(0) - x;
+                            t_y = tiles.GetUpperBound(1) - y;
+                            break;
+                        case 3:
+                            t_x = y;
+                            t_y = x;
+                            break;
+                    }
+
+                    tiles[t_x, t_y].Draw(spriteBatch, new Point(x, y));
                 }
             }
 
