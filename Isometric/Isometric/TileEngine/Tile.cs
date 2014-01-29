@@ -20,11 +20,6 @@ namespace Isometric.TileEngine
         private static List<List<Texture2D>> tileTypeTextures;
 
         /// <summary>
-        /// the size of the used window
-        /// </summary>
-        private static Vector2 windowSize;
-
-        /// <summary>
         /// the size of the tiles
         /// </summary>
         private static Vector2 tileSize;
@@ -35,9 +30,14 @@ namespace Isometric.TileEngine
         private static Vector2 textureOrigin;
 
         /// <summary>
-        /// the offset of adjacent tiles used to draw
+        /// the offset for each x
         /// </summary>
-        private static Vector2 tileOffset;
+        private static Vector2 tileOffset_X;
+
+        /// <summary>
+        /// the offset for each y
+        /// </summary>
+        private static Vector2 tileOffset_Y;
 
         /// <summary>
         /// the offset of adjacent tiles used to draw
@@ -50,12 +50,12 @@ namespace Isometric.TileEngine
          *  static methods
          ***************************************************************************************************/
 
-        public static void initialize(Vector2 windowSize, Vector2 tileSize, Vector2 textureOrigin, Vector2 tileOffset, float stackingTileOffset)
+        public static void initialize(Vector2 tileSize, Vector2 textureOrigin, Vector2 tileOffset, float stackingTileOffset)
         {
-            Tile.windowSize = windowSize;
             Tile.tileSize = tileSize;
             Tile.textureOrigin = textureOrigin;
-            Tile.tileOffset = tileOffset;
+            Tile.tileOffset_X = new Vector2(tileOffset.X,-tileOffset.Y);
+            Tile.tileOffset_Y = tileOffset;
             Tile.stackingTileOffset = stackingTileOffset;
             tileTypeTextures = new List<List<Texture2D>>();
         }
@@ -133,7 +133,7 @@ namespace Isometric.TileEngine
         /// <param name="indices">the world coordinates of the tile</param>
         public void Draw(SpriteBatch spriteBatch, Point coordinates)
         {
-            Vector2 pos = coordinates.X * new Vector2(32, -16) + coordinates.Y * new Vector2(32,16);
+            Vector2 pos = coordinates.X * tileOffset_X + coordinates.Y * tileOffset_Y;
 
             foreach(int index in indices)
             {

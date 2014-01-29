@@ -112,6 +112,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="TileEngine\ERotation.cs" />
     <Compile Include="TileEngine\Helper.cs" />
     <Compile Include="TileEngine\Tile.cs" />
     <Compile Include="TileEngine\TileEngine.cs" />

@@ -27,7 +27,7 @@ namespace Isometric
 
         protected override void Initialize()
         {
-            Tile.initialize(new Vector2(Window.ClientBounds.Width, Window.ClientBounds.Height), new Vector2(64), new Vector2(32, 48), new Vector2(64,16), 11);
+            Tile.initialize(new Vector2(64,42), new Vector2(32, 16), new Vector2(32,16), 11);
             this.test = new Test();
             test.Initialize();
             base.Initialize();

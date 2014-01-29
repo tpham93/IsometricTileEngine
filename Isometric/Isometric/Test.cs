@@ -21,11 +21,10 @@ namespace Isometric
 
         Input input;
 
-        int rotationCounter;
+        Rotation rotationCounter;
 
         public Test()
         {
-
         }
 
         public void Initialize()
@@ -56,7 +55,7 @@ namespace Isometric
             Texture2D spriteSheet = content.Load<Texture2D>(@"tileSet");
             for (int i = 0; i < spriteSheet.Width / 64; ++i)
             {
-                Rectangle sourceRect = new Rectangle(i * 64, 0, 64, 64);
+                Rectangle sourceRect = new Rectangle(i * 64, 0, 64, 42);
                 Tile.addTexture(Helper.crop(spriteBatch,spriteSheet,sourceRect),0);
             }
 
@@ -87,7 +86,7 @@ namespace Isometric
                 movement -= Vector2.UnitY;
             }
 
-            movement *= 64 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            movement *= 128 * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             position += movement;
 
@@ -95,12 +94,12 @@ namespace Isometric
             if (input.keyClicked(Keys.Q))
             {
                 rotationCounter += 1;
-                rotationCounter %= 4;
+                rotationCounter = (Rotation)((int)rotationCounter % 4);
             }
             if (input.keyClicked(Keys.E))
             {
                 rotationCounter += 3;
-                rotationCounter %= 4;
+                rotationCounter = (Rotation)((int)rotationCounter % 4);
             }
 
         }
@@ -123,21 +122,25 @@ namespace Isometric
                     int t_y = 0;
                     switch (rotationCounter)
                     {
-                        case 0:
+                        case Rotation._0_DEGREE:
                             t_x = x;
                             t_y = y;
                             break;
-                        case 1:
+                        case Rotation._90_DEGREE:
                             t_x = tiles.GetUpperBound(1) - y;
                             t_y = tiles.GetUpperBound(0) - x;
                             break;
-                        case 2:
+                        case Rotation._180_DEGREE:
                             t_x = tiles.GetUpperBound(0) - x;
                             t_y = tiles.GetUpperBound(1) - y;
                             break;
-                        case 3:
+                        case Rotation._270_DEGREE:
                             t_x = y;
                             t_y = x;
+                            break;
+                        default:
+                            t_x = x;
+                            t_y = y;
                             break;
                     }
 
