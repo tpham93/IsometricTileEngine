@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using Isometric.TileEngine;
+using Isometric.TEngine;
 
 namespace Isometric
 {
@@ -27,7 +27,6 @@ namespace Isometric
 
         protected override void Initialize()
         {
-            Tile.initialize(new Vector2(64,42), new Vector2(32, 16), new Vector2(32,16), 11);
             this.test = new Test();
             test.Initialize();
             base.Initialize();

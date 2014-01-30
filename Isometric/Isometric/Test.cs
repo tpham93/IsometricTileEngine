@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using Isometric.TileEngine;
+using Isometric.TEngine;
 using Isometric.GameComponents;
 
 namespace Isometric
@@ -17,7 +17,7 @@ namespace Isometric
     {
         Vector2 position;
 
-        Tile[,] tiles;
+        TileEngine tileEngine;
 
         Input input;
 
@@ -29,13 +29,15 @@ namespace Isometric
 
         public void Initialize()
         {
-            position = new Vector2(400,300);
+            position = new Vector2(400,150);
             input = new Input();
-            
-            Tile.addType();
 
-            tiles = new Tile[10, 10];
+            tileEngine = new TileEngine(new Point(10, 10));
+            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, 16), new Vector2(-32, 16), 11);
+            tileEngine.addType();
+
             List<int> indices = new List<int>();
+            Tile[,] tiles = tileEngine.Tiles;
             for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
             {
                 for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
@@ -56,7 +58,7 @@ namespace Isometric
             for (int i = 0; i < spriteSheet.Width / 64; ++i)
             {
                 Rectangle sourceRect = new Rectangle(i * 64, 0, 64, 42);
-                Tile.addTexture(Helper.crop(spriteBatch,spriteSheet,sourceRect),0);
+                tileEngine.addTexture(Helper.crop(spriteBatch,spriteSheet,sourceRect),0);
             }
 
 
@@ -114,40 +116,7 @@ namespace Isometric
                 null,
                 Matrix.CreateTranslation(new Vector3(position, 0)));
 
-            for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
-            {
-                for (int x = tiles.GetUpperBound(0); x >= 0; --x)
-                {
-                    int t_x = 0;
-                    int t_y = 0;
-                    switch (rotationCounter)
-                    {
-                        case Rotation._0_DEGREE:
-                            t_x = x;
-                            t_y = y;
-                            break;
-                        case Rotation._90_DEGREE:
-                            t_x = tiles.GetUpperBound(1) - y;
-                            t_y = tiles.GetUpperBound(0) - x;
-                            break;
-                        case Rotation._180_DEGREE:
-                            t_x = tiles.GetUpperBound(0) - x;
-                            t_y = tiles.GetUpperBound(1) - y;
-                            break;
-                        case Rotation._270_DEGREE:
-                            t_x = y;
-                            t_y = x;
-                            break;
-                        default:
-                            t_x = x;
-                            t_y = y;
-                            break;
-                    }
-
-                    tiles[t_x, t_y].Draw(spriteBatch, new Point(x, y));
-                }
-            }
-
+            tileEngine.draw(spriteBatch, rotationCounter);
 
             spriteBatch.End();
         }

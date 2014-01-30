@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Isometric.TileEngine
+namespace Isometric.TEngine
 {
     class Helper
     {

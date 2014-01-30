@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Isometric.TileEngine
+namespace Isometric.TEngine
 {
-    enum Rotation
+    public enum Rotation
     {
         _0_DEGREE,
         _90_DEGREE,
