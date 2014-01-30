@@ -117,6 +117,15 @@ namespace Isometric.TEngine
         }
 
         /// <summary>
+        /// removes a tile type
+        /// </summary>
+        /// <param name="index">the index of the type</param>
+        public void removeType(int index)
+        {
+            this.tileTypeTextures.RemoveAt(index);
+        }
+
+        /// <summary>
         /// adds a new texture to the given type of tile
         /// </summary>
         /// <param name="texture">the texture which should be added to the type of tile</param>
@@ -252,6 +261,26 @@ namespace Isometric.TEngine
                 spriteBatch.Draw(tileTypeTextures[tile.typeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
                 pos.Y -= stackingTileOffset;
             }
+        }
+
+        /// <summary>
+        /// calculates the offset of the tile's offset relatively to the origin
+        /// </summary>
+        /// <param name="tile">the tile calculating the offset from</param>
+        /// <returns>the offset from the top relatively to the origin</returns>
+        public Vector2 getTileTopOffset(Tile tile)
+        {
+            return Vector2.UnitY * stackingTileOffset * (tile.indices.Count -1);
+        }
+
+        /// <summary>
+        /// calculates the offset of the tile's offset relatively to the origin
+        /// </summary>
+        /// <param name="tileCoordinate">the coordinates for the tile</param>
+        /// <returns>the offset from the top relatively to the origin</returns>
+        public Vector2 getTileTopOffset(Point tileCoordinate)
+        {
+            return getTileTopOffset(tiles[tileCoordinate.X,tileCoordinate.Y]);
         }
     }
 }

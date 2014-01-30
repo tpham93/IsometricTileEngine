@@ -29,11 +29,12 @@ namespace Isometric
 
         public void Initialize()
         {
-            position = new Vector2(400,150);
+            position = new Vector2(0, 0);
+            //position = new Vector2(400, 150);
             input = new Input();
 
             tileEngine = new TileEngine(new Point(10, 10));
-            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, 16), new Vector2(-32, 16), 11);
+            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, 16), new Vector2(-32, 16), 10);
             tileEngine.addType();
 
             List<int> indices = new List<int>();
@@ -50,6 +51,8 @@ namespace Isometric
                     tiles[x, y] = new Tile(0,indices);
                 }
             }
+
+            position = tileEngine.getTileTopOffset(new Point());
         }
 
         public void LoadContent(ContentManager content, SpriteBatch spriteBatch)
