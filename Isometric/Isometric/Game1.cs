@@ -29,6 +29,9 @@ namespace Isometric
         {
             this.test = new Test();
             test.Initialize();
+
+            IsMouseVisible = true;
+
             base.Initialize();
         }
 
@@ -52,7 +55,7 @@ namespace Isometric
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            test.Draw(spriteBatch);
+            test.Draw(spriteBatch, gameTime);
 
             base.Draw(gameTime);
         }

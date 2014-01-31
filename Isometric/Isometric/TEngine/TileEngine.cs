@@ -69,6 +69,14 @@ namespace Isometric.TEngine
             get { return tileTypeTextures.Count; }
         }
 
+        /// <summary>
+        /// gets the size of the map
+        /// </summary>
+        public Point MapSize
+        {
+            get { return new Point(tiles.GetUpperBound(0),tiles.GetUpperBound(1)); }
+        }
+
         /*
          * methods
          */
@@ -157,9 +165,9 @@ namespace Isometric.TEngine
         {
             for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
             {
-                for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
+                for (int x = tiles.GetUpperBound(0); x >=0 ; --x)
                 {
-                    Point tileCoordinates = rotateCoordinates(new Point(x, y), rotation);
+                    Point tileCoordinates = getRotatedCoordinates(new Point(x, y), inverseRotation(rotation));
                     int t_x = tileCoordinates.X;
                     int t_y = tileCoordinates.Y;
 
@@ -169,8 +177,6 @@ namespace Isometric.TEngine
 
         }
 
-
-
         /// <summary>
         /// drawing the tile onto the screen
         /// </summary>
@@ -178,13 +184,18 @@ namespace Isometric.TEngine
         /// <param name="indices">the world coordinates of the tile</param>
         public void drawTile(SpriteBatch spriteBatch, Tile tile, Point coordinates)
         {
-            Vector2 pos = coordinates.X * tileOffset_X + coordinates.Y * tileOffset_Y;
+            Vector2 pos = getTilePosition(coordinates);
 
             foreach (int index in tile.indices)
             {
                 spriteBatch.Draw(tileTypeTextures[tile.typeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
                 pos.Y -= stackingTileOffset;
             }
+        }
+
+        public Vector2 getTilePosition(Point coordinates)
+        {
+            return coordinates.X * tileOffset_X + coordinates.Y * tileOffset_Y;
         }
 
         /// <summary>
@@ -194,7 +205,7 @@ namespace Isometric.TEngine
         /// <returns>the offset from the top relatively to the origin</returns>
         public Vector2 getTileTopOffset(Tile tile)
         {
-            return Vector2.UnitY * stackingTileOffset * (tile.indices.Count -1);
+            return -Vector2.UnitY * stackingTileOffset * (tile.indices.Count -1);
         }
 
         /// <summary>
@@ -205,7 +216,7 @@ namespace Isometric.TEngine
         /// <returns>the offset from the top relatively to the origin</returns>
         public Vector2 getTileTopOffset(Point tileCoordinate, Rotation currentRotation = Rotation._0_DEGREE)
         {
-            Point worldCoordinates = rotateCoordinates(tileCoordinate,currentRotation);
+            Point worldCoordinates = getRotatedCoordinates(tileCoordinate,currentRotation);
             return getTileTopOffset(tiles[worldCoordinates.X,worldCoordinates.Y]);
         }
 
@@ -215,7 +226,7 @@ namespace Isometric.TEngine
         /// <param name="coordinates">the coordinates which have to be rotated</param>
         /// <param name="rotation">the rotation of the result</param>
         /// <returns>a rotated coordinate</returns>
-        public Point rotateCoordinates(Point coordinates, Rotation rotation)
+        public Point getRotatedCoordinates(Point coordinates, Rotation rotation)
         {
             Point output = new Point();
 
@@ -226,16 +237,16 @@ namespace Isometric.TEngine
                     output.Y = coordinates.Y;
                     break;
                 case Rotation._90_DEGREE:
-                    output.X = coordinates.X;
-                    output.Y = tiles.GetUpperBound(1) - coordinates.Y;
+                    output.X = coordinates.Y;
+                    output.Y = tiles.GetUpperBound(1) - coordinates.X;
                     break;
                 case Rotation._180_DEGREE:
                     output.X = tiles.GetUpperBound(0) - coordinates.X;
                     output.Y = tiles.GetUpperBound(1) - coordinates.Y;
                     break;
                 case Rotation._270_DEGREE:
-                    output.X = tiles.GetUpperBound(0) - coordinates.X;
-                    output.Y = coordinates.Y;
+                    output.X = tiles.GetUpperBound(0) - coordinates.Y;
+                    output.Y = coordinates.X;
                     break;
                 default:
                     break;
@@ -259,6 +270,23 @@ namespace Isometric.TEngine
                     return Rotation._90_DEGREE;
                 default:
                     return rotation;
+            }
+        }
+
+        public static Point rotatePoint(Point point, Rotation rotation)
+        {
+            switch (rotation)
+            {
+                case Rotation._0_DEGREE:
+                    return point;
+                case Rotation._90_DEGREE:
+                    return new Point(-point.Y, point.X);
+                case Rotation._180_DEGREE:
+                    return new Point(-point.X, -point.Y);
+                case Rotation._270_DEGREE:
+                    return new Point(point.Y, -point.X);
+                default:
+                    return Point.Zero;
             }
         }
     }

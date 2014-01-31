@@ -21,7 +21,11 @@ namespace Isometric
 
         Input input;
 
-        Rotation rotationCounter;
+        Rotation rotation;
+
+        Texture2D cursor;
+
+        Point selectedTile;
 
         public Test()
         {
@@ -29,12 +33,12 @@ namespace Isometric
 
         public void Initialize()
         {
-            position = new Vector2(0, 0);
-            //position = new Vector2(400, 150);
+            position = Vector2.Zero;
+            selectedTile = new Point();
             input = new Input();
 
             tileEngine = new TileEngine(new Point(10, 10));
-            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, 16), new Vector2(-32, 16), 10);
+            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, -16), new Vector2(32, 16), 10);
             tileEngine.addType();
 
             List<int> indices = new List<int>();
@@ -44,7 +48,7 @@ namespace Isometric
                 for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
                 {
                     indices = new List<int>();
-                    for (int i = 0; i < 10 - Math.Max(x,y); ++i)
+                    for (int i = 0; i <= Math.Max(x,y); ++i)
                     {
                         indices.Add(i);
                     }
@@ -52,7 +56,6 @@ namespace Isometric
                 }
             }
 
-            position = tileEngine.getTileTopOffset(new Point(0,0));
         }
 
         public void LoadContent(ContentManager content, SpriteBatch spriteBatch)
@@ -64,6 +67,7 @@ namespace Isometric
                 tileEngine.addTexture(Helper.crop(spriteBatch,spriteSheet,sourceRect),0);
             }
 
+            cursor = content.Load<Texture2D>(@"cursor");
 
         }
 
@@ -98,19 +102,49 @@ namespace Isometric
 
             if (input.keyClicked(Keys.Q))
             {
-                rotationCounter += 1;
-                rotationCounter = (Rotation)((int)rotationCounter % 4);
+                rotation += 1;
+                rotation = (Rotation)((int)rotation % 4);
             }
             if (input.keyClicked(Keys.E))
             {
-                rotationCounter += 3;
-                rotationCounter = (Rotation)((int)rotationCounter % 4);
+                rotation += 3;
+                rotation = (Rotation)((int)rotation % 4);
             }
+
+            Point mapSize = tileEngine.MapSize;
+            Point cursorMovement = Point.Zero;
+
+            if (input.keyClicked(Keys.Left))
+            {
+                --cursorMovement.X;
+            }
+            if (input.keyClicked(Keys.Right))
+            {
+                ++cursorMovement.X;
+            }
+            if (input.keyClicked(Keys.Up))
+            {
+                --cursorMovement.Y;
+            }
+            if (input.keyClicked(Keys.Down))
+            {
+                ++cursorMovement.Y;
+            }
+
+            cursorMovement = TileEngine.rotatePoint(cursorMovement, rotation);
+
+
+
+            selectedTile.X = Math.Min(Math.Max(selectedTile.X + cursorMovement.X, 0), mapSize.X);
+            selectedTile.Y = Math.Min(Math.Max(selectedTile.Y + cursorMovement.Y, 0), mapSize.Y);
 
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
+            Vector2 cursorOffset = -Vector2.UnitY * (32 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds)) + tileEngine.getTileTopOffset(selectedTile);
+
+            Vector2 cursorPosition = tileEngine.getTilePosition(tileEngine.getRotatedCoordinates(selectedTile,rotation)) + cursorOffset;
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 null,
                 null, 
@@ -119,7 +153,9 @@ namespace Isometric
                 null,
                 Matrix.CreateTranslation(new Vector3(position, 0)));
 
-            tileEngine.draw(spriteBatch, rotationCounter);
+            tileEngine.draw(spriteBatch, rotation);
+
+            spriteBatch.Draw(cursor, cursorPosition,null, Color.White,0f,new Vector2(cursor.Bounds.Width/2f,cursor.Bounds.Height),1f,SpriteEffects.None,0);
 
             spriteBatch.End();
         }
