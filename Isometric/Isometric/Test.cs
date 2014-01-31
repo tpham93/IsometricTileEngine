@@ -44,7 +44,7 @@ namespace Isometric
                 for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
                 {
                     indices = new List<int>();
-                    for (int i = 0; i < 10 - x; ++i)
+                    for (int i = 0; i < 10 - Math.Max(x,y); ++i)
                     {
                         indices.Add(i);
                     }
@@ -52,7 +52,7 @@ namespace Isometric
                 }
             }
 
-            position = tileEngine.getTileTopOffset(new Point());
+            position = tileEngine.getTileTopOffset(new Point(0,0));
         }
 
         public void LoadContent(ContentManager content, SpriteBatch spriteBatch)

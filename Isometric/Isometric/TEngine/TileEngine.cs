@@ -128,7 +128,7 @@ namespace Isometric.TEngine
         /// <summary>
         /// adds a new texture to the given type of tile
         /// </summary>
-        /// <param name="texture">the texture which should be added to the type of tile</param>
+        /// <param name="textures">textures you want to add to the type of tile</param>
         /// <param name="typeIndex">the index of tile</param>
         public void addTexture(Texture2D texture, int typeIndex)
         {
@@ -138,7 +138,7 @@ namespace Isometric.TEngine
         /// <summary>
         /// add multiple textures in the same order to the given type of tile
         /// </summary>
-        /// <param name="textures">textures which should be added to the type of tile</param>
+        /// <param name="textures">textures you want to add to the type of tile</param>
         /// <param name="typeIndex">the index of tile</param>
         public void addTexture(Texture2D[] textures, int typeIndex)
         {
@@ -151,106 +151,30 @@ namespace Isometric.TEngine
         /// <summary>
         /// drawing the tiles
         /// </summary>
-        /// <param name="spriteBatch">spriteBatch used to draw the tiles onto the rendertarget</param>
+        /// <param name="spriteBatch">the spritebatch which you want to use to draw the tiles onto the rendertarget</param>
         /// <param name="rotation">rotation of the world</param>
         public void draw(SpriteBatch spriteBatch, Rotation rotation)
         {
-            switch (rotation)
-            {
-                case Rotation._0_DEGREE:
-                    drawTiles_0_Degree(spriteBatch);
-                    break;
-                case Rotation._90_DEGREE:
-                    drawTiles_90_Degree(spriteBatch);
-                    break;
-                case Rotation._180_DEGREE:
-                    drawTiles_180_Degree(spriteBatch);
-                    break;
-                case Rotation._270_DEGREE:
-                    drawTiles_270_Degree(spriteBatch);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// drawing the tiles rotated by 0 degree
-        /// </summary>
-        /// <param name="spriteBatch">spriteBatch used to draw the tiles onto the rendertarget</param>
-        private void drawTiles_0_Degree(SpriteBatch spriteBatch)
-        {
             for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
             {
                 for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
                 {
-                    int t_x = x;
-                    int t_y = y;
-                        
-                    drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
-                }
-            }
-        }
-
-        /// <summary>
-        /// drawing the tiles rotated by 90 degree
-        /// </summary>
-        /// <param name="spriteBatch">spriteBatch used to draw the tiles onto the rendertarget</param>
-        private void drawTiles_90_Degree(SpriteBatch spriteBatch)
-        {
-            for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
-            {
-                for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
-                {
-                    int t_x = tiles.GetUpperBound(1) - y;
-                    int t_y = tiles.GetUpperBound(0) - x;
+                    Point tileCoordinates = rotateCoordinates(new Point(x, y), rotation);
+                    int t_x = tileCoordinates.X;
+                    int t_y = tileCoordinates.Y;
 
                     drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
                 }
             }
+
         }
 
-        /// <summary>
-        /// drawing the tiles rotated by 180 degree
-        /// </summary>
-        /// <param name="spriteBatch">spriteBatch used to draw the tiles onto the rendertarget</param>
-        private void drawTiles_180_Degree(SpriteBatch spriteBatch)
-        {
-            for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
-            {
-                for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
-                {
-                    int t_x = tiles.GetUpperBound(0) - x;
-                    int t_y = tiles.GetUpperBound(1) - y;
-
-                    drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
-                }
-            }
-        }
-
-        /// <summary>
-        /// drawing the tiles rotated by 270 degree
-        /// </summary>
-        /// <param name="spriteBatch">spriteBatch used to draw the tiles onto the rendertarget</param>
-        private void drawTiles_270_Degree(SpriteBatch spriteBatch)
-        {
-            for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
-            {
-                for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
-                {
-                    int t_x = y;
-                    int t_y = x;
-
-                    drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
-                }
-            }
-        }
 
 
         /// <summary>
         /// drawing the tile onto the screen
         /// </summary>
-        /// <param name="spriteBatch">the spritebatch used to drawing this tile onto the rendertarget</param>
+        /// <param name="spriteBatch">the spritebatch which you want to use to draw the tiles onto the rendertarget</param>
         /// <param name="indices">the world coordinates of the tile</param>
         public void drawTile(SpriteBatch spriteBatch, Tile tile, Point coordinates)
         {
@@ -274,13 +198,68 @@ namespace Isometric.TEngine
         }
 
         /// <summary>
-        /// calculates the offset of the tile's offset relatively to the origin
+        /// calculates the offset of the tile's top relatively to the origin
         /// </summary>
         /// <param name="tileCoordinate">the coordinates for the tile</param>
+        /// <param name="currentRotation">the rotation of the world</param>
         /// <returns>the offset from the top relatively to the origin</returns>
-        public Vector2 getTileTopOffset(Point tileCoordinate)
+        public Vector2 getTileTopOffset(Point tileCoordinate, Rotation currentRotation = Rotation._0_DEGREE)
         {
-            return getTileTopOffset(tiles[tileCoordinate.X,tileCoordinate.Y]);
+            Point worldCoordinates = rotateCoordinates(tileCoordinate,currentRotation);
+            return getTileTopOffset(tiles[worldCoordinates.X,worldCoordinates.Y]);
+        }
+
+        /// <summary>
+        /// rotate the coordinates according to the give rotation
+        /// </summary>
+        /// <param name="coordinates">the coordinates which have to be rotated</param>
+        /// <param name="rotation">the rotation of the result</param>
+        /// <returns>a rotated coordinate</returns>
+        public Point rotateCoordinates(Point coordinates, Rotation rotation)
+        {
+            Point output = new Point();
+
+            switch (rotation)
+            {
+                case Rotation._0_DEGREE:
+                    output.X = coordinates.X;
+                    output.Y = coordinates.Y;
+                    break;
+                case Rotation._90_DEGREE:
+                    output.X = coordinates.X;
+                    output.Y = tiles.GetUpperBound(1) - coordinates.Y;
+                    break;
+                case Rotation._180_DEGREE:
+                    output.X = tiles.GetUpperBound(0) - coordinates.X;
+                    output.Y = tiles.GetUpperBound(1) - coordinates.Y;
+                    break;
+                case Rotation._270_DEGREE:
+                    output.X = tiles.GetUpperBound(0) - coordinates.X;
+                    output.Y = coordinates.Y;
+                    break;
+                default:
+                    break;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// inverses the rotation
+        /// </summary>
+        /// <param name="rotation">the rotation which you want to get the inverse rotation from</param>
+        /// <returns>the inverted rotation</returns>
+        public static Rotation inverseRotation(Rotation rotation)
+        {
+            switch (rotation)
+            {
+                case Rotation._90_DEGREE:
+                    return Rotation._270_DEGREE;
+                case Rotation._270_DEGREE:
+                    return Rotation._90_DEGREE;
+                default:
+                    return rotation;
+            }
         }
     }
 }
