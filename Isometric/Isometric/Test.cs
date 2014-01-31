@@ -138,11 +138,23 @@ namespace Isometric
             selectedTile.X = Math.Min(Math.Max(selectedTile.X + cursorMovement.X, 0), mapSize.X);
             selectedTile.Y = Math.Min(Math.Max(selectedTile.Y + cursorMovement.Y, 0), mapSize.Y);
 
-        }
 
+            if (input.isKeyDown(Keys.R) || input.scrolledUp())
+            {
+                scale = Math.Min(scale + 0.01f, 1.5f);
+            }
+            if (input.isKeyDown(Keys.F) || input.scrolledDown())
+            {
+                scale = Math.Max(scale - 0.01f, 0.5f);
+
+            }
+
+            
+        }
+        float scale = 1.0f;
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            Vector2 cursorOffset = -Vector2.UnitY * (32 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds)) + tileEngine.getTileTopOffset(selectedTile);
+            Vector2 cursorOffset = -Vector2.UnitY * (16 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds)) + tileEngine.getTileTopOffset(selectedTile);
 
             Vector2 cursorPosition = tileEngine.getTilePosition(tileEngine.getRotatedCoordinates(selectedTile,rotation)) + cursorOffset;
             spriteBatch.Begin(SpriteSortMode.Immediate,
@@ -151,7 +163,7 @@ namespace Isometric
                 null, 
                 null, 
                 null,
-                Matrix.CreateTranslation(new Vector3(position, 0)));
+                Matrix.CreateTranslation(new Vector3(position, 0)) * Matrix.CreateScale(scale));
 
             tileEngine.draw(spriteBatch, rotation);
 

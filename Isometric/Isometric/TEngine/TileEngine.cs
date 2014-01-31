@@ -273,6 +273,12 @@ namespace Isometric.TEngine
             }
         }
 
+        /// <summary>
+        /// rotate a point according to the given rotation
+        /// </summary>
+        /// <param name="point">the point you want to rotate</param>
+        /// <param name="rotation">the rotation according which you want to rotate the point</param>
+        /// <returns>a rotated point</returns>
         public static Point rotatePoint(Point point, Rotation rotation)
         {
             switch (rotation)

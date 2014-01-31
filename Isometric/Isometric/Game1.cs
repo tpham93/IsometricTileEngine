@@ -39,6 +39,7 @@ namespace Isometric
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
             test.LoadContent(Content, spriteBatch);
+
         }
 
         protected override void UnloadContent()
