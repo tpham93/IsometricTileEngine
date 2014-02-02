@@ -27,6 +27,8 @@ namespace Isometric
 
         Point selectedTile;
 
+        Texture2D overlay;
+
         public Test()
         {
         }
@@ -68,9 +70,9 @@ namespace Isometric
 
             cursor = content.Load<Texture2D>(@"cursor");
 
-            Texture2D overlay = content.Load<Texture2D>(@"tileOverlay");
+            overlay = content.Load<Texture2D>(@"tileOverlay");
 
-            tileEngine.addTileOverlay(new TileOverlay(overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2f, Color.Blue * 0.75f));
+            //tileEngine.addTileOverlay(new TileOverlay(overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2f, Color.Blue * 0.75f));
         }
 
         public void Update(GameTime gameTime)
@@ -137,8 +139,8 @@ namespace Isometric
 
 
 
-            selectedTile.X = Math.Min(Math.Max(selectedTile.X + cursorMovement.X, 0), mapSize.X);
-            selectedTile.Y = Math.Min(Math.Max(selectedTile.Y + cursorMovement.Y, 0), mapSize.Y);
+            selectedTile.X = Math.Min(Math.Max(selectedTile.X + cursorMovement.X, 0), mapSize.X - 1);
+            selectedTile.Y = Math.Min(Math.Max(selectedTile.Y + cursorMovement.Y, 0), mapSize.Y - 1);
 
 
             if (input.isKeyDown(Keys.R) || input.scrolledUp())
@@ -152,22 +154,6 @@ namespace Isometric
             }
 
             Tile[,] tiles = tileEngine.Tiles;
-
-            for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
-            {
-                for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
-                {
-                    if (selectedTile == new Point(x, y) || selectedTile == new Point(x + 1, y) || selectedTile == new Point(x, y + 1) || selectedTile == new Point(x - 1, y) || selectedTile == new Point(x, y - 1))
-                    {
-                        tiles[x, y].OverlayIndex = 0;
-                    }
-                    else
-                    {
-                        tiles[x, y].OverlayIndex = -1;
-                    }
-                }
-            }
-
         }
         float scale = 1.0f;
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
@@ -175,6 +161,7 @@ namespace Isometric
             Vector2 cursorOffset = -Vector2.UnitY * (16 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds)) + tileEngine.getTileTopOffset(selectedTile);
 
             Vector2 cursorPosition = tileEngine.getTilePosition(tileEngine.getRotatedCoordinates(selectedTile, rotation)) + cursorOffset;
+
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 null,
                 null,
@@ -183,7 +170,18 @@ namespace Isometric
                 null,
                 Matrix.CreateTranslation(new Vector3(position, 0)) * Matrix.CreateScale(scale));
 
-            tileEngine.draw(spriteBatch, rotation);
+            List<TileOverlay> tileOverlays = new List<TileOverlay>();
+
+            Point mapSize = tileEngine.MapSize;
+
+            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X + 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y + 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X - 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y - 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+
+
+            tileEngine.draw(spriteBatch, rotation, tileOverlays);
 
             spriteBatch.Draw(cursor, cursorPosition, null, Color.White, 0f, new Vector2(cursor.Bounds.Width / 2f, cursor.Bounds.Height), 1f, SpriteEffects.None, 0);
 

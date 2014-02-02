@@ -110,6 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameComponents\Input.cs" />
+    <Compile Include="TEngine\TileComparer.cs" />
     <Compile Include="TEngine\TileOverlay.cs" />
     <Compile Include="Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

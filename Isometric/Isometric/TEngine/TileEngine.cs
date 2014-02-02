@@ -25,11 +25,6 @@ namespace Isometric.TEngine
         private List<List<Texture2D>> tileTypeTextures;
 
         /// <summary>
-        /// list of all overlays
-        /// </summary>
-        private List<TileOverlay> tileOverlays;
-
-        /// <summary>
         /// the size of the tiles
         /// </summary>
         private Vector2 tileSize;
@@ -82,7 +77,7 @@ namespace Isometric.TEngine
         /// </summary>
         public Point MapSize
         {
-            get { return new Point(tiles.GetUpperBound(0),tiles.GetUpperBound(1)); }
+            get { return new Point(tiles.GetUpperBound(0) +1, tiles.GetUpperBound(1) +1); }
         }
 
 
@@ -98,7 +93,7 @@ namespace Isometric.TEngine
         /// <param name="dimension">worldsize</param>
         /// <param name="defaultTypeIndex">the index used for initialization of the tiles</param>
         public TileEngine(Point dimension)
-            :this(dimension,-1)
+            : this(dimension, -1)
         {
         }
 
@@ -135,7 +130,6 @@ namespace Isometric.TEngine
             this.tileOffset_Y = tileOffset_Y;
             this.stackingTileOffset = stackingTileOffset;
             this.tileTypeTextures = new List<List<Texture2D>>();
-            this.tileOverlays = new List<TileOverlay>();
         }
 
         /// <summary>
@@ -179,22 +173,29 @@ namespace Isometric.TEngine
         }
 
         /// <summary>
-        /// add multiple textures in the same order to the given type of tile
-        /// </summary>
-        /// <param name="textures">textures you want to add to the type of tile</param>
-        /// <param name="typeIndex">the index of tile</param>
-        public void addTileOverlay(TileOverlay tileOverlays)
-        {
-            this.tileOverlays.Add(tileOverlays);
-        }
-
-        /// <summary>
         /// drawing the tiles
         /// </summary>
         /// <param name="spriteBatch">the spritebatch which you want to use to draw the tiles onto the rendertarget</param>
         /// <param name="rotation">rotation of the world</param>
-        public void draw(SpriteBatch spriteBatch, Rotation rotation)
+        public void draw(SpriteBatch spriteBatch, Rotation rotation, List<TileOverlay> overlays = null)
         {
+            DrawingOrderComparer drawingOrderComparer = new DrawingOrderComparer(MapSize);
+
+            Queue<TileOverlay> sortedOverlays = new Queue<TileOverlay>();
+
+            if (overlays != null)
+            {
+                Point mapSize = MapSize;
+                foreach (TileOverlay overlay in overlays)
+                {
+                    if (overlay.Position.X >= 0 && overlay.Position.Y >= 0 && overlay.Position.X < mapSize.X && overlay.Position.Y < mapSize.Y)
+                    {
+                        sortedOverlays.Enqueue(new TileOverlay(getRotatedCoordinates(overlay.Position, rotation), overlay.Texture, overlay.Origin, overlay.Color));
+                    }
+                }
+                sortedOverlays = new Queue<TileOverlay>(sortedOverlays.OrderBy(overlay => overlay.Position, drawingOrderComparer));
+            }
+
             int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
             for (int y = 0; y <= maxSize; ++y)
             {
@@ -204,9 +205,17 @@ namespace Isometric.TEngine
                     int t_x = tileCoordinates.X;
                     int t_y = tileCoordinates.Y;
 
-                    if(t_x >= 0 && t_y >= 0 && t_x <= tiles.GetUpperBound(0) && t_y <= tiles.GetUpperBound(1)){
+                    if (t_x >= 0 && t_y >= 0 && t_x <= tiles.GetUpperBound(0) && t_y <= tiles.GetUpperBound(1))
+                    {
                         drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
                     }
+
+                    while (sortedOverlays.Count > 0 && sortedOverlays.Peek().Position == new Point(x, y))
+                    {
+                        TileOverlay overlay = sortedOverlays.Dequeue();
+                        spriteBatch.Draw(overlay.Texture, getTilePosition(overlay.Position) + getTileTopOffset(tiles[t_x, t_y]), null, overlay.Color, 0, overlay.Origin, 1f, SpriteEffects.None, 0);
+                    }
+
                 }
             }
 
@@ -226,11 +235,6 @@ namespace Isometric.TEngine
                 spriteBatch.Draw(tileTypeTextures[tile.TypeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
                 pos.Y -= stackingTileOffset;
             }
-            if (tile.OverlayIndex != -1)
-            {
-                pos.Y += stackingTileOffset;
-                spriteBatch.Draw(tileOverlays[tile.OverlayIndex].Texture, pos, null, tileOverlays[tile.OverlayIndex].Color, 0f, tileOverlays[tile.OverlayIndex].Origin, 1, SpriteEffects.None, 0f);
-            }
         }
 
         public Vector2 getTilePosition(Point coordinates)
@@ -245,7 +249,7 @@ namespace Isometric.TEngine
         /// <returns>the offset from the top relatively to the origin</returns>
         public Vector2 getTileTopOffset(Tile tile)
         {
-            return -Vector2.UnitY * stackingTileOffset * (tile.Indices.Count -1);
+            return -Vector2.UnitY * stackingTileOffset * (tile.Indices.Count - 1);
         }
 
         /// <summary>
@@ -256,8 +260,8 @@ namespace Isometric.TEngine
         /// <returns>the offset from the top relatively to the origin</returns>
         public Vector2 getTileTopOffset(Point tileCoordinate, Rotation currentRotation = Rotation._0_DEGREE)
         {
-            Point worldCoordinates = getRotatedCoordinates(tileCoordinate,currentRotation);
-            return getTileTopOffset(tiles[worldCoordinates.X,worldCoordinates.Y]);
+            Point worldCoordinates = getRotatedCoordinates(tileCoordinate, currentRotation);
+            return getTileTopOffset(tiles[worldCoordinates.X, worldCoordinates.Y]);
         }
 
         /// <summary>

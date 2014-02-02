@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -24,11 +23,6 @@ namespace Isometric.TEngine
         /// </summary>
         private List<int> indices;
 
-        /// <summary>
-        /// the index used for the overlay which is drawn on top of the tile (-1 if there is none)
-        /// </summary>
-        private int overlayIndex;
-
 
 
 
@@ -48,12 +42,6 @@ namespace Isometric.TEngine
             set { indices = value; }
         }
 
-        public int OverlayIndex
-        {
-            get { return overlayIndex; }
-            set { overlayIndex = value; }
-        }
-
 
 
 
@@ -67,17 +55,7 @@ namespace Isometric.TEngine
         /// <param name="typeIndex">the tiles typeIndex</param>
         /// <param name="coordinates">the tiles coordinates on the map</param>
         public Tile(int typeIndex)
-            : this(typeIndex, -1)
-        {
-        }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="typeIndex">the tiles typeIndex</param>
-        /// <param name="coordinates">the tiles coordinates on the map</param>
-        public Tile(int typeIndex, int overlayIndex)
-            : this(typeIndex, new List<int>(), overlayIndex)
+            : this(typeIndex, new List<int>())
         {
         }
 
@@ -87,21 +65,9 @@ namespace Isometric.TEngine
         /// <param name="typeIndex">the tiles typeIndex</param>
         /// <param name="indices">the texture indices</param>
         public Tile(int typeIndex, List<int> indices)
-            :this(typeIndex,indices,-1)
-        {
-        }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="typeIndex">the tiles typeIndex</param>
-        /// <param name="indices">the texture indices</param>
-        /// <param name="overlayIndex">the index for the overlay</param>
-        public Tile(int typeIndex, List<int> indices, int overlayIndex)
         {
             this.typeIndex = typeIndex;
             this.indices = indices;
-            this.overlayIndex = overlayIndex;
         }
     }
 }

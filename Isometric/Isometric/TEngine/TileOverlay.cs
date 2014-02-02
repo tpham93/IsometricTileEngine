@@ -14,6 +14,11 @@ namespace Isometric.TEngine
          ***************************************************************************************************/
 
         /// <summary>
+        /// the position of the tile
+        /// </summary>
+        private Point position;
+
+        /// <summary>
         /// the texture of the overlay
         /// </summary>
         private Texture2D texture;
@@ -35,6 +40,12 @@ namespace Isometric.TEngine
          *  properties
          ***************************************************************************************************/
 
+        public Point Position
+        {
+            get { return position; }
+            set { position = value; }
+        }
+
         public Texture2D Texture
         {
             get { return texture; }
@@ -53,7 +64,7 @@ namespace Isometric.TEngine
             set { color = value; }
         }
 
-
+        
 
 
         /***************************************************************************************************
@@ -64,8 +75,8 @@ namespace Isometric.TEngine
         /// Constructor (color is set to Color.White)
         /// </summary>
         /// <param name="texture"></param>
-        public TileOverlay(Texture2D texture)
-            :this(texture, new Vector2(texture.Bounds.Width/2, texture.Bounds.Height/2), Color.White)
+        public TileOverlay(Point position, Texture2D texture)
+            :this(position, texture, new Vector2(texture.Bounds.Width/2, texture.Bounds.Height/2), Color.White)
         {
         }
 
@@ -75,8 +86,9 @@ namespace Isometric.TEngine
         /// <param name="texture">the overlay's texture</param>
         /// <param name="origin">the texture's origin</param>
         /// <param name="color">the color you want to draw the overlay with</param>
-        public TileOverlay(Texture2D texture, Vector2 origin, Color color)
+        public TileOverlay(Point position, Texture2D texture, Vector2 origin, Color color)
         {
+            this.position = position;
             this.texture = texture;
             this.origin = origin;
             this.color = color;
