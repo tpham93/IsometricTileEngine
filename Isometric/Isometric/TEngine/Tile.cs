@@ -8,21 +8,51 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Isometric.TEngine
 {
-    public struct Tile
+    public class Tile
     {
         /***************************************************************************************************
          *  attributes
          ***************************************************************************************************/
 
         /// <summary>
-        /// the index for the tileTypeTextures
+        /// the index for the tileTypeTextures (-1 if there is none)
         /// </summary>
-        public int typeIndex;
+        private int typeIndex;
 
         /// <summary>
         /// the indices of textures which are supposed to be stacked on each other
         /// </summary>
-        public List<int> indices;
+        private List<int> indices;
+
+        /// <summary>
+        /// the index used for the overlay which is drawn on top of the tile (-1 if there is none)
+        /// </summary>
+        private int overlayIndex;
+
+
+
+
+         /***************************************************************************************************
+         *  attributes
+         ***************************************************************************************************/
+
+        public int TypeIndex
+        {
+            get { return typeIndex; }
+            set { typeIndex = value; }
+        }
+
+        public List<int> Indices
+        {
+            get { return indices; }
+            set { indices = value; }
+        }
+
+        public int OverlayIndex
+        {
+            get { return overlayIndex; }
+            set { overlayIndex = value; }
+        }
 
 
 
@@ -37,21 +67,41 @@ namespace Isometric.TEngine
         /// <param name="typeIndex">the tiles typeIndex</param>
         /// <param name="coordinates">the tiles coordinates on the map</param>
         public Tile(int typeIndex)
-            : this(typeIndex, new List<int>())
+            : this(typeIndex, -1)
         {
         }
-
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="position">the tiles worldposition</param>
+        /// <param name="typeIndex">the tiles typeIndex</param>
+        /// <param name="coordinates">the tiles coordinates on the map</param>
+        public Tile(int typeIndex, int overlayIndex)
+            : this(typeIndex, new List<int>(), overlayIndex)
+        {
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         /// <param name="typeIndex">the tiles typeIndex</param>
         /// <param name="indices">the texture indices</param>
         public Tile(int typeIndex, List<int> indices)
+            :this(typeIndex,indices,-1)
+        {
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="typeIndex">the tiles typeIndex</param>
+        /// <param name="indices">the texture indices</param>
+        /// <param name="overlayIndex">the index for the overlay</param>
+        public Tile(int typeIndex, List<int> indices, int overlayIndex)
         {
             this.typeIndex = typeIndex;
             this.indices = indices;
+            this.overlayIndex = overlayIndex;
         }
     }
 }

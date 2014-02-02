@@ -9,9 +9,9 @@ namespace Isometric.TEngine
 {
     class TileEngine
     {
-        /*
-         * attributes
-         */
+        /***************************************************************************************************
+         *  attributes
+         ***************************************************************************************************/
 
         /// <summary>
         /// the tiles managed by the engine
@@ -23,6 +23,11 @@ namespace Isometric.TEngine
         /// list of all types of tiles and their textures
         /// </summary>
         private List<List<Texture2D>> tileTypeTextures;
+
+        /// <summary>
+        /// list of all overlays
+        /// </summary>
+        private List<TileOverlay> tileOverlays;
 
         /// <summary>
         /// the size of the tiles
@@ -49,9 +54,12 @@ namespace Isometric.TEngine
         /// </summary>
         private float stackingTileOffset;
 
-        /*
-         * properties
-         */
+
+
+
+        /***************************************************************************************************
+         *  properties
+         ***************************************************************************************************/
 
         /// <summary>
         /// gets the tilematrix
@@ -77,9 +85,12 @@ namespace Isometric.TEngine
             get { return new Point(tiles.GetUpperBound(0),tiles.GetUpperBound(1)); }
         }
 
-        /*
-         * methods
-         */
+
+
+
+        /***************************************************************************************************
+         *  methods
+         ***************************************************************************************************/
 
         /// <summary>
         /// Constructor
@@ -87,13 +98,23 @@ namespace Isometric.TEngine
         /// <param name="dimension">worldsize</param>
         /// <param name="defaultTypeIndex">the index used for initialization of the tiles</param>
         public TileEngine(Point dimension)
+            :this(dimension,-1)
+        {
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="dimension">worldsize</param>
+        /// <param name="defaultTypeIndex">the index used for initialization of the tiles</param>
+        public TileEngine(Point dimension, int standartType)
         {
             tiles = new Tile[dimension.X, dimension.Y];
             for (int x = 0; x < dimension.X; ++x)
             {
                 for (int y = 0; y < dimension.Y; ++y)
                 {
-                    tiles[x, y] = new Tile();
+                    tiles[x, y] = new Tile(standartType);
                 }
             }
         }
@@ -114,6 +135,7 @@ namespace Isometric.TEngine
             this.tileOffset_Y = tileOffset_Y;
             this.stackingTileOffset = stackingTileOffset;
             this.tileTypeTextures = new List<List<Texture2D>>();
+            this.tileOverlays = new List<TileOverlay>();
         }
 
         /// <summary>
@@ -152,8 +174,18 @@ namespace Isometric.TEngine
         {
             foreach (Texture2D texture in textures)
             {
-                addTexture(texture, typeIndex);
+                this.addTexture(texture, typeIndex);
             }
+        }
+
+        /// <summary>
+        /// add multiple textures in the same order to the given type of tile
+        /// </summary>
+        /// <param name="textures">textures you want to add to the type of tile</param>
+        /// <param name="typeIndex">the index of tile</param>
+        public void addTileOverlay(TileOverlay tileOverlays)
+        {
+            this.tileOverlays.Add(tileOverlays);
         }
 
         /// <summary>
@@ -163,15 +195,18 @@ namespace Isometric.TEngine
         /// <param name="rotation">rotation of the world</param>
         public void draw(SpriteBatch spriteBatch, Rotation rotation)
         {
-            for (int y = 0; y <= tiles.GetUpperBound(1); ++y)
+            int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
+            for (int y = 0; y <= maxSize; ++y)
             {
-                for (int x = tiles.GetUpperBound(0); x >=0 ; --x)
+                for (int x = maxSize; x >= 0; --x)
                 {
                     Point tileCoordinates = getRotatedCoordinates(new Point(x, y), inverseRotation(rotation));
                     int t_x = tileCoordinates.X;
                     int t_y = tileCoordinates.Y;
 
-                    drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
+                    if(t_x >= 0 && t_y >= 0 && t_x <= tiles.GetUpperBound(0) && t_y <= tiles.GetUpperBound(1)){
+                        drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
+                    }
                 }
             }
 
@@ -186,10 +221,15 @@ namespace Isometric.TEngine
         {
             Vector2 pos = getTilePosition(coordinates);
 
-            foreach (int index in tile.indices)
+            foreach (int index in tile.Indices)
             {
-                spriteBatch.Draw(tileTypeTextures[tile.typeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
+                spriteBatch.Draw(tileTypeTextures[tile.TypeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
                 pos.Y -= stackingTileOffset;
+            }
+            if (tile.OverlayIndex != -1)
+            {
+                pos.Y += stackingTileOffset;
+                spriteBatch.Draw(tileOverlays[tile.OverlayIndex].Texture, pos, null, tileOverlays[tile.OverlayIndex].Color, 0f, tileOverlays[tile.OverlayIndex].Origin, 1, SpriteEffects.None, 0f);
             }
         }
 
@@ -205,7 +245,7 @@ namespace Isometric.TEngine
         /// <returns>the offset from the top relatively to the origin</returns>
         public Vector2 getTileTopOffset(Tile tile)
         {
-            return -Vector2.UnitY * stackingTileOffset * (tile.indices.Count -1);
+            return -Vector2.UnitY * stackingTileOffset * (tile.Indices.Count -1);
         }
 
         /// <summary>
@@ -229,7 +269,7 @@ namespace Isometric.TEngine
         public Point getRotatedCoordinates(Point coordinates, Rotation rotation)
         {
             Point output = new Point();
-
+            int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
             switch (rotation)
             {
                 case Rotation._0_DEGREE:
@@ -238,14 +278,14 @@ namespace Isometric.TEngine
                     break;
                 case Rotation._90_DEGREE:
                     output.X = coordinates.Y;
-                    output.Y = tiles.GetUpperBound(1) - coordinates.X;
+                    output.Y = maxSize - coordinates.X;
                     break;
                 case Rotation._180_DEGREE:
-                    output.X = tiles.GetUpperBound(0) - coordinates.X;
-                    output.Y = tiles.GetUpperBound(1) - coordinates.Y;
+                    output.X = maxSize - coordinates.X;
+                    output.Y = maxSize - coordinates.Y;
                     break;
                 case Rotation._270_DEGREE:
-                    output.X = tiles.GetUpperBound(0) - coordinates.Y;
+                    output.X = maxSize - coordinates.Y;
                     output.Y = coordinates.X;
                     break;
                 default:
