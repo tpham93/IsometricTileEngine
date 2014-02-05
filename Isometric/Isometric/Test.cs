@@ -39,7 +39,7 @@ namespace Isometric
             selectedTile = new Point();
             input = new Input();
 
-            tileEngine = new TileEngine(new Point(10, 5));
+            tileEngine = new TileEngine(new Point(50, 50));
             tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, -16), new Vector2(32, 16), 10);
             tileEngine.addType();
 
@@ -50,10 +50,14 @@ namespace Isometric
                 for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
                 {
                     indices = new List<int>();
-                    for (int i = 0; i <= Math.Max(x, y); ++i)
+                    if (x % 10 == 0 || y%10==0)
+                    for (int i = 0; i <= 10; ++i)
                     {
-                        indices.Add(i);
+                        indices.Add(i % 10);
                     }
+                    else
+                        indices.Add((x+y) % 10);
+
                     tiles[x, y] = new Tile(0, indices);
                 }
             }
@@ -71,8 +75,6 @@ namespace Isometric
             cursor = content.Load<Texture2D>(@"cursor");
 
             overlay = content.Load<Texture2D>(@"tileOverlay");
-
-            //tileEngine.addTileOverlay(new TileOverlay(overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2f, Color.Blue * 0.75f));
         }
 
         public void Update(GameTime gameTime)
@@ -145,11 +147,11 @@ namespace Isometric
 
             if (input.isKeyDown(Keys.R) || input.scrolledUp())
             {
-                scale = Math.Min(scale + 0.01f, 1.5f);
+                scale = Math.Min(scale + 0.01f, 5f);
             }
             if (input.isKeyDown(Keys.F) || input.scrolledDown())
             {
-                scale = Math.Max(scale - 0.01f, 0.5f);
+                scale = Math.Max(scale - 0.01f, 0.001f);
 
             }
 
@@ -158,9 +160,7 @@ namespace Isometric
         float scale = 1.0f;
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            Vector2 cursorOffset = -Vector2.UnitY * (16 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds)) + tileEngine.getTileTopOffset(selectedTile);
-
-            Vector2 cursorPosition = tileEngine.getTilePosition(tileEngine.getRotatedCoordinates(selectedTile, rotation)) + cursorOffset;
+            Vector2 cursorOffset = -Vector2.UnitY * (16 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds));
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 null,
@@ -175,15 +175,14 @@ namespace Isometric
             Point mapSize = tileEngine.MapSize;
 
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y), cursor, new Vector2(cursor.Bounds.Width / 2f, cursor.Bounds.Height) - cursorOffset, Color.White));
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X + 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y + 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X - 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y - 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
 
 
-            tileEngine.draw(spriteBatch, rotation, tileOverlays);
-
-            spriteBatch.Draw(cursor, cursorPosition, null, Color.White, 0f, new Vector2(cursor.Bounds.Width / 2f, cursor.Bounds.Height), 1f, SpriteEffects.None, 0);
+            tileEngine.draw(spriteBatch,new Rectangle((int)-position.X,(int)-position.Y,800,600),scale, rotation, tileOverlays);
 
             spriteBatch.End();
         }

@@ -77,7 +77,7 @@ namespace Isometric.TEngine
         /// </summary>
         public Point MapSize
         {
-            get { return new Point(tiles.GetUpperBound(0) +1, tiles.GetUpperBound(1) +1); }
+            get { return new Point(tiles.GetUpperBound(0) + 1, tiles.GetUpperBound(1) + 1); }
         }
 
 
@@ -172,12 +172,17 @@ namespace Isometric.TEngine
             }
         }
 
+
+
         /// <summary>
         /// drawing the tiles
         /// </summary>
         /// <param name="spriteBatch">the spritebatch which you want to use to draw the tiles onto the rendertarget</param>
+        /// <param name="screen">the screen with its position and size</param>
+        /// <param name="scale">the scale used to draw</param>
         /// <param name="rotation">rotation of the world</param>
-        public void draw(SpriteBatch spriteBatch, Rotation rotation, List<TileOverlay> overlays = null)
+        /// <param name="overlays">the overlays which should be drawn onto the tiles</param>
+        public void draw(SpriteBatch spriteBatch, Rectangle screen, float scale, Rotation rotation, List<TileOverlay> overlays = null)
         {
             DrawingOrderComparer drawingOrderComparer = new DrawingOrderComparer(MapSize);
 
@@ -197,28 +202,48 @@ namespace Isometric.TEngine
             }
 
             int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
+
+            Queue<TilePosition> drawingTiles = new Queue<TilePosition>(maxSize * maxSize);
+
+            screen = new Rectangle((int)(screen.X * scale), (int)(screen.Y * scale), (int)(screen.Width), (int)(screen.Height));
+
             for (int y = 0; y <= maxSize; ++y)
             {
                 for (int x = maxSize; x >= 0; --x)
                 {
+                    Point coordinates = new Point(x, y);
                     Point tileCoordinates = getRotatedCoordinates(new Point(x, y), inverseRotation(rotation));
                     int t_x = tileCoordinates.X;
                     int t_y = tileCoordinates.Y;
-
                     if (t_x >= 0 && t_y >= 0 && t_x <= tiles.GetUpperBound(0) && t_y <= tiles.GetUpperBound(1))
                     {
-                        drawTile(spriteBatch, tiles[t_x, t_y], new Point(x, y));
+                        Vector2 position = (getTilePosition(new Point(x, y)) - textureOrigin + new Vector2(0, tileSize.Y + getTileTopOffset(tiles[t_x, t_y]).Y)) * scale;
+                        Rectangle tileRect = new Rectangle((int)position.X, (int)position.Y, (int)(tileSize.X * scale), (int)((tileSize.Y - getTileTopOffset(tiles[t_x, t_y]).Y) * scale));
+                        if (screen.Intersects(tileRect))
+                        {
+                            Queue<TileOverlay> tileOverlays = new Queue<TileOverlay>();
+                            while (sortedOverlays.Count > 0 && sortedOverlays.Peek().Position == coordinates)
+                            {
+                                tileOverlays.Enqueue(sortedOverlays.Dequeue());
+                            }
+                            drawingTiles.Enqueue(new TilePosition(tiles[t_x, t_y], coordinates, tileOverlays));
+                        }
                     }
-
-                    while (sortedOverlays.Count > 0 && sortedOverlays.Peek().Position == new Point(x, y))
-                    {
-                        TileOverlay overlay = sortedOverlays.Dequeue();
-                        spriteBatch.Draw(overlay.Texture, getTilePosition(overlay.Position) + getTileTopOffset(tiles[t_x, t_y]), null, overlay.Color, 0, overlay.Origin, 1f, SpriteEffects.None, 0);
-                    }
-
                 }
             }
 
+            while (drawingTiles.Count > 0)
+            {
+                TilePosition tilePosition = drawingTiles.Dequeue();
+
+                drawTile(spriteBatch, tilePosition.tile, tilePosition.position);
+
+                while (tilePosition.overlays.Count > 0)
+                {
+                    TileOverlay overlay = tilePosition.overlays.Dequeue();
+                    spriteBatch.Draw(overlay.Texture, getTilePosition(tilePosition.position) + getTileTopOffset(tilePosition.tile), null, overlay.Color, 0, overlay.Origin, 1f, SpriteEffects.None, 0);
+                }
+            }
         }
 
         /// <summary>
