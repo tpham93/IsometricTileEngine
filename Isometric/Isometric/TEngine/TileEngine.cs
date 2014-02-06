@@ -84,7 +84,7 @@ namespace Isometric.TEngine
 
 
         /***************************************************************************************************
-         *  methods
+         *  public methods
          ***************************************************************************************************/
 
         /// <summary>
@@ -222,9 +222,12 @@ namespace Isometric.TEngine
                         if (screen.Intersects(tileRect))
                         {
                             Queue<TileOverlay> tileOverlays = new Queue<TileOverlay>();
-                            while (sortedOverlays.Count > 0 && sortedOverlays.Peek().Position == coordinates)
+
+                            while (sortedOverlays.Count > 0 && drawingOrderComparer.Compare(sortedOverlays.Peek().Position, coordinates) <= 0)
                             {
-                                tileOverlays.Enqueue(sortedOverlays.Dequeue());
+                                TileOverlay overlay = sortedOverlays.Dequeue();
+                                if (overlay.Position == coordinates)
+                                    tileOverlays.Enqueue(overlay);
                             }
                             drawingTiles.Enqueue(new TilePosition(tiles[t_x, t_y], coordinates, tileOverlays));
                         }
@@ -232,6 +235,7 @@ namespace Isometric.TEngine
                 }
             }
 
+            
             while (drawingTiles.Count > 0)
             {
                 TilePosition tilePosition = drawingTiles.Dequeue();
@@ -364,5 +368,7 @@ namespace Isometric.TEngine
                     return Point.Zero;
             }
         }
+
+
     }
 }

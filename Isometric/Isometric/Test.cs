@@ -50,13 +50,14 @@ namespace Isometric
                 for (int x = 0; x <= tiles.GetUpperBound(0); ++x)
                 {
                     indices = new List<int>();
-                    if (x % 10 == 0 || y%10==0)
-                    for (int i = 0; i <= 10; ++i)
-                    {
-                        indices.Add(i % 10);
-                    }
+                    if (x % 10 == 0 || y % 10 == 0)
+                        //for (int i = 0; i <= (x % 10 + y % 10); ++i)
+                        for (int i = 0; i <= 50; ++i)
+                        {
+                            indices.Add(i % 10);
+                        }
                     else
-                        indices.Add((x+y) % 10);
+                        indices.Add((x + y) % 10);
 
                     tiles[x, y] = new Tile(0, indices);
                 }
@@ -103,7 +104,7 @@ namespace Isometric
 
             movement *= 128 * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            position += movement;
+            position += movement / scale;
 
 
             if (input.keyClicked(Keys.Q))
@@ -151,7 +152,7 @@ namespace Isometric
             }
             if (input.isKeyDown(Keys.F) || input.scrolledDown())
             {
-                scale = Math.Max(scale - 0.01f, 0.001f);
+                scale = Math.Max(scale - 0.01f, 0.01f);
 
             }
 
@@ -174,15 +175,28 @@ namespace Isometric
 
             Point mapSize = tileEngine.MapSize;
 
+            float height = tileEngine.Tiles[selectedTile.X, selectedTile.Y].Indices.Count;
+            float size_X = tileEngine.Tiles.GetUpperBound(0);
+            float size_Y = tileEngine.Tiles.GetUpperBound(1);
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+
+
             tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y), cursor, new Vector2(cursor.Bounds.Width / 2f, cursor.Bounds.Height) - cursorOffset, Color.White));
-            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X + 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
-            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y + 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
-            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X - 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
-            tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y - 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+
+            if (selectedTile.X + 1 >= 0 && selectedTile.X + 1 <= size_X && Math.Abs(height - tileEngine.Tiles[selectedTile.X + 1, selectedTile.Y].Indices.Count) <= 1)
+                tileOverlays.Add(new TileOverlay(new Point(selectedTile.X + 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+
+            if (selectedTile.Y + 1 >= 0 && selectedTile.Y + 1 <= size_Y && Math.Abs(height - tileEngine.Tiles[selectedTile.X, selectedTile.Y + 1].Indices.Count) <= 1)
+                tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y + 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+
+            if (selectedTile.X - 1 >= 0 && selectedTile.X - 1 <= size_X && Math.Abs(height - tileEngine.Tiles[selectedTile.X - 1, selectedTile.Y].Indices.Count) <= 1)
+                tileOverlays.Add(new TileOverlay(new Point(selectedTile.X - 1, selectedTile.Y), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
+
+            if (selectedTile.Y - 1 >= 0 && selectedTile.Y - 1 <= size_Y && Math.Abs(height - tileEngine.Tiles[selectedTile.X, selectedTile.Y - 1].Indices.Count) <= 1)
+                tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y - 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
 
 
-            tileEngine.draw(spriteBatch,new Rectangle((int)-position.X,(int)-position.Y,800,600),scale, rotation, tileOverlays);
+            tileEngine.draw(spriteBatch, new Rectangle((int)-position.X, (int)-position.Y, 800, 600), scale, rotation, tileOverlays);
 
             spriteBatch.End();
         }
