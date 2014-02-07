@@ -217,8 +217,9 @@ namespace Isometric.TEngine
                     int t_y = tileCoordinates.Y;
                     if (t_x >= 0 && t_y >= 0 && t_x <= tiles.GetUpperBound(0) && t_y <= tiles.GetUpperBound(1))
                     {
-                        Vector2 position = (getTilePosition(new Point(x, y)) - textureOrigin + new Vector2(0, tileSize.Y + getTileTopOffset(tiles[t_x, t_y]).Y)) * scale;
-                        Rectangle tileRect = new Rectangle((int)position.X, (int)position.Y, (int)(tileSize.X * scale), (int)((tileSize.Y - getTileTopOffset(tiles[t_x, t_y]).Y) * scale));
+                        Vector2 tileTopOffset = new Vector2(0,- getTileTopOffset(tiles[t_x, t_y]).Y);
+                        Vector2 position = (getTilePosition(new Point(x, y)) - textureOrigin - tileTopOffset) * scale;
+                        Rectangle tileRect = new Rectangle((int)position.X, (int)position.Y, (int)(tileSize.X * scale), (int)(( tileSize.Y + tileTopOffset.Y) * scale));
                         if (screen.Intersects(tileRect))
                         {
                             Queue<TileOverlay> tileOverlays = new Queue<TileOverlay>();
@@ -234,7 +235,6 @@ namespace Isometric.TEngine
                     }
                 }
             }
-
             
             while (drawingTiles.Count > 0)
             {
