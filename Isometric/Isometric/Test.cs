@@ -163,7 +163,16 @@ namespace Isometric
             }
             if (input.isKeyDown(Keys.F) || input.scrolledDown())
             {
+                float oldScale = scale;
                 scale = Math.Max(scale - (input.scrolledDown() ? 0.1f : 0.03f), 0.2f);
+                if (input.mousePositionV2() != new Vector2(400, 300))
+                {
+                    Vector2 oldRelativeMousePosition = (input.mousePositionV2() - new Vector2(400, 300)) / oldScale;
+                    Vector2 newRelativeMousePosition = (input.mousePositionV2() - new Vector2(400, 300)) / scale;
+
+                    position -= oldRelativeMousePosition - newRelativeMousePosition;
+
+                }
             }
 
             Tile[,] tiles = tileEngine.Tiles;
