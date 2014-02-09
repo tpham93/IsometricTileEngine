@@ -178,11 +178,12 @@ namespace Isometric.TEngine
         /// drawing the tiles
         /// </summary>
         /// <param name="spriteBatch">the spritebatch which you want to use to draw the tiles onto the rendertarget</param>
+        /// <param name="screenOffset">the translation added to the spritebatch after scaling</param>
         /// <param name="screen">the screen with its position and size</param>
         /// <param name="scale">the scale used to draw</param>
         /// <param name="rotation">rotation of the world</param>
         /// <param name="overlays">the overlays which should be drawn onto the tiles</param>
-        public void draw(SpriteBatch spriteBatch, Rectangle screen, float scale, Rotation rotation, List<TileOverlay> overlays = null)
+        public void draw(SpriteBatch spriteBatch, Vector2 screenOffset, Rectangle screen, float scale, Rotation rotation, List<TileOverlay> overlays = null)
         {
             DrawingOrderComparer drawingOrderComparer = new DrawingOrderComparer(MapSize);
 
@@ -205,7 +206,7 @@ namespace Isometric.TEngine
 
             Queue<TilePosition> drawingTiles = new Queue<TilePosition>(maxSize * maxSize);
 
-            screen = new Rectangle((int)(screen.X * scale), (int)(screen.Y * scale), (int)(screen.Width), (int)(screen.Height));
+            screen = new Rectangle((int)(screen.X * scale) - (int)screenOffset.X, (int)(screen.Y * scale) - (int)screenOffset.Y, (int)(screen.Width), (int)(screen.Height));
 
             for (int y = 0; y <= maxSize; ++y)
             {

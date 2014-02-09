@@ -29,6 +29,9 @@ namespace Isometric
 
         Texture2D overlay;
 
+        float scale;
+
+
         public Test()
         {
         }
@@ -38,6 +41,7 @@ namespace Isometric
             position = Vector2.Zero;
             selectedTile = new Point();
             input = new Input();
+            scale = 1.0f;
 
             tileEngine = new TileEngine(new Point(50, 50));
             tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, -16), new Vector2(32, 16), 10);
@@ -51,8 +55,8 @@ namespace Isometric
                 {
                     indices = new List<int>();
                     if (x % 10 == 0 || y % 10 == 0)
-                        //for (int i = 0; i <= (x % 10 + y % 10); ++i)
-                        for (int i = 0; i <= 50; ++i)
+                        for (int i = 0; i <= (x % 10 + y % 10); ++i)
+                        //for (int i = 0; i <= 50; ++i)
                         {
                             indices.Add(i % 10);
                         }
@@ -102,7 +106,7 @@ namespace Isometric
                 movement -= Vector2.UnitY;
             }
 
-            movement *= 128 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            movement *= 256 * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             position += movement / scale;
 
@@ -140,28 +144,37 @@ namespace Isometric
 
             cursorMovement = TileEngine.rotatePoint(cursorMovement, rotation);
 
-
-
             selectedTile.X = Math.Min(Math.Max(selectedTile.X + cursorMovement.X, 0), mapSize.X - 1);
             selectedTile.Y = Math.Min(Math.Max(selectedTile.Y + cursorMovement.Y, 0), mapSize.Y - 1);
 
 
             if (input.isKeyDown(Keys.R) || input.scrolledUp())
             {
-                scale = Math.Min(scale + 0.01f, 5f);
+                float oldScale = scale;
+                scale = Math.Min(scale + (input.scrolledUp() ? 0.1f : 0.03f), 5f);
+                if (input.mousePositionV2() != new Vector2(400,300))
+                {
+                    Vector2 oldRelativeMousePosition = (input.mousePositionV2() - new Vector2(400, 300)) / oldScale;
+                    Vector2 newRelativeMousePosition = (input.mousePositionV2() - new Vector2(400, 300)) / scale;
+
+                    position -= oldRelativeMousePosition - newRelativeMousePosition;
+
+                }
             }
             if (input.isKeyDown(Keys.F) || input.scrolledDown())
             {
-                scale = Math.Max(scale - 0.01f, 0.01f);
-
+                scale = Math.Max(scale - (input.scrolledDown() ? 0.1f : 0.03f), 0.2f);
             }
 
             Tile[,] tiles = tileEngine.Tiles;
         }
-        float scale = 1.0f;
+
+
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
             Vector2 cursorOffset = -Vector2.UnitY * (16 + 10 * (float)Math.Sin(5 * gameTime.TotalGameTime.TotalSeconds));
+
+            Vector2 screenOffset = new Vector2(400, 300);
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 null,
@@ -169,7 +182,7 @@ namespace Isometric
                 null,
                 null,
                 null,
-                Matrix.CreateTranslation(new Vector3(position, 0)) * Matrix.CreateScale(scale));
+                Matrix.CreateTranslation(new Vector3(position, 0)) * Matrix.CreateScale(scale) * Matrix.CreateTranslation(new Vector3(screenOffset, 0)));
 
             List<TileOverlay> tileOverlays = new List<TileOverlay>();
 
@@ -196,7 +209,7 @@ namespace Isometric
                 tileOverlays.Add(new TileOverlay(new Point(selectedTile.X, selectedTile.Y - 1), overlay, new Vector2(overlay.Bounds.Width, overlay.Bounds.Height) / 2, Color.Blue * 0.8f));
 
 
-            tileEngine.draw(spriteBatch, new Rectangle((int)-position.X, (int)-position.Y, 800, 600), scale, rotation, tileOverlays);
+            tileEngine.draw(spriteBatch, screenOffset, new Rectangle((int)-position.X, (int)-position.Y, 800, 600), scale, rotation, tileOverlays);
 
             spriteBatch.End();
         }
