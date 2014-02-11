@@ -31,7 +31,6 @@ namespace Isometric
 
         float scale;
 
-
         public Test()
         {
         }
@@ -43,8 +42,8 @@ namespace Isometric
             input = new Input();
             scale = 1.0f;
 
-            tileEngine = new TileEngine(new Point(50, 50));
-            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, -16), new Vector2(32, 16), 10);
+            tileEngine = new TileEngine(new Point(50, 20));
+            tileEngine.initialize(new Vector2(64, 42), new Vector2(32, 16), new Vector2(32, -16), new Vector2(32, 16), new Vector2(0,-10));
             tileEngine.addType();
 
             List<int> indices = new List<int>();

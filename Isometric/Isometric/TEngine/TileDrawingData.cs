@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Isometric.TEngine
 {
-    struct TilePosition
+    struct TileDrawingData
     {
         /// <summary>
         /// the tile which should be drawn
@@ -16,7 +16,7 @@ namespace Isometric.TEngine
         /// <summary>
         /// the position where the tile should be drawn
         /// </summary>
-        public Point position;
+        public Point coordinates;
 
         /// <summary>
         /// the overlay of the tiles
@@ -27,11 +27,11 @@ namespace Isometric.TEngine
         /// Constructor
         /// </summary>
         /// <param name="tile">the tile which should be drawn</param>
-        /// <param name="position">the position where the tile should be drawn</param>
-        public TilePosition(Tile tile, Point position, Queue<TileOverlay> overlays)
+        /// <param name="coordinates">the position where the tile should be drawn</param>
+        public TileDrawingData(Tile tile, Point coordinates, Queue<TileOverlay> overlays)
         {
             this.tile = tile;
-            this.position = position;
+            this.coordinates = coordinates;
             this.overlays = overlays;
         }
     }

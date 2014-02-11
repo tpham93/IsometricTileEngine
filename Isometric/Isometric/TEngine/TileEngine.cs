@@ -47,7 +47,7 @@ namespace Isometric.TEngine
         /// <summary>
         /// the offset of adjacent tiles used to draw
         /// </summary>
-        private float stackingTileOffset;
+        private Vector2 stackingTileOffset;
 
 
 
@@ -122,7 +122,7 @@ namespace Isometric.TEngine
         /// <param name="tileOffset_X">the offset for a tile relative to a neighbor on the x-axis</param>
         /// <param name="tileOffset_Y">the offset for a tile relative to a neighbor on the y-axis</param>
         /// <param name="stackingTileOffset">the offset used to stack tiles onto each other</param>
-        public void initialize(Vector2 tileSize, Vector2 textureOrigin, Vector2 tileOffset_X, Vector2 tileOffset_Y, float stackingTileOffset)
+        public void initialize(Vector2 tileSize, Vector2 textureOrigin, Vector2 tileOffset_X, Vector2 tileOffset_Y, Vector2 stackingTileOffset)
         {
             this.tileSize = tileSize;
             this.textureOrigin = textureOrigin;
@@ -138,6 +138,18 @@ namespace Isometric.TEngine
         public void addType()
         {
             this.tileTypeTextures.Add(new List<Texture2D>());
+        }
+
+        /// <summary>
+        /// adds multiple types
+        /// </summary>
+        /// <param name="num">the number of types to add</param>
+        public void addType(int num)
+        {
+            for (int i = 0; i < num; ++i)
+            {
+                addType();
+            }
         }
 
         /// <summary>
@@ -179,74 +191,100 @@ namespace Isometric.TEngine
         /// </summary>
         /// <param name="spriteBatch">the spritebatch which you want to use to draw the tiles onto the rendertarget</param>
         /// <param name="screenOffset">the translation added to the spritebatch after scaling</param>
-        /// <param name="screen">the screen with its position and size</param>
+        /// <param name="transformedScreen">the screen with its position and size</param>
         /// <param name="scale">the scale used to draw</param>
         /// <param name="rotation">rotation of the world</param>
         /// <param name="overlays">the overlays which should be drawn onto the tiles</param>
         public void draw(SpriteBatch spriteBatch, Vector2 screenOffset, Rectangle screen, float scale, Rotation rotation, List<TileOverlay> overlays = null)
         {
+            //create a new comparer to sort the overlays
             DrawingOrderComparer drawingOrderComparer = new DrawingOrderComparer(MapSize);
 
+            //a queue to save the sorted overlays
             Queue<TileOverlay> sortedOverlays = new Queue<TileOverlay>();
 
+            //sort the overlays if there exists any
             if (overlays != null)
             {
-                Point mapSize = MapSize;
+                //iterate through all overlays to save and rotate them
                 foreach (TileOverlay overlay in overlays)
                 {
-                    if (overlay.Position.X >= 0 && overlay.Position.Y >= 0 && overlay.Position.X < mapSize.X && overlay.Position.Y < mapSize.Y)
-                    {
-                        sortedOverlays.Enqueue(new TileOverlay(getRotatedCoordinates(overlay.Position, rotation), overlay.Texture, overlay.Origin, overlay.Color));
-                    }
+                    //rotate all overlays
+                    sortedOverlays.Enqueue(new TileOverlay(getRotatedCoordinates(overlay.Position, rotation), overlay.Texture, overlay.Origin, overlay.Color));
                 }
+                //sort the queue with the drawingOrderComparer
                 sortedOverlays = new Queue<TileOverlay>(sortedOverlays.OrderBy(overlay => overlay.Position, drawingOrderComparer));
             }
-
+            
+            // the maximum for x and y
             int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
 
-            Queue<TilePosition> drawingTiles = new Queue<TilePosition>(maxSize * maxSize);
+            // a queue to save the tiles in the right order with their information
+            Queue<TileDrawingData> drawingTiles = new Queue<TileDrawingData>(maxSize * maxSize);
 
-            screen = new Rectangle((int)(screen.X * scale) - (int)screenOffset.X, (int)(screen.Y * scale) - (int)screenOffset.Y, (int)(screen.Width), (int)(screen.Height));
+            // the rectangle representing the screen in the world
+            Rectangle transformedScreen = new Rectangle((int)(screen.X * scale) - (int)screenOffset.X, (int)(screen.Y * scale) - (int)screenOffset.Y, (int)(screen.Width), (int)(screen.Height));
 
+            //iterate through every tile to select the tiles needed to draw
             for (int y = 0; y <= maxSize; ++y)
             {
                 for (int x = maxSize; x >= 0; --x)
                 {
+                    //the rotated coordinates from the world
                     Point coordinates = new Point(x, y);
-                    Point tileCoordinates = getRotatedCoordinates(new Point(x, y), inverseRotation(rotation));
-                    int t_x = tileCoordinates.X;
-                    int t_y = tileCoordinates.Y;
-                    if (t_x >= 0 && t_y >= 0 && t_x <= tiles.GetUpperBound(0) && t_y <= tiles.GetUpperBound(1))
+                    //the coordinates from the tile which should be drawn at the rotated coordinates
+                    Point tileCoordinates = getRotatedCoordinates(coordinates, inverseRotation(rotation));
+
+                    //see if the tile is within the world
+                    if (tileCoordinates.X >= 0 && tileCoordinates.Y >= 0 && tileCoordinates.X <= tiles.GetUpperBound(0) && tileCoordinates.Y <= tiles.GetUpperBound(1))
                     {
-                        Vector2 tileTopOffset = new Vector2(0,- getTileTopOffset(tiles[t_x, t_y]).Y);
-                        Vector2 position = (getTilePosition(new Point(x, y)) - textureOrigin - tileTopOffset) * scale;
-                        Rectangle tileRect = new Rectangle((int)position.X, (int)position.Y, (int)(tileSize.X * scale), (int)(( tileSize.Y + tileTopOffset.Y) * scale));
-                        if (screen.Intersects(tileRect))
+                        //the offset between the lowest and he highest stacked tile
+                        Vector2 tileTopOffset = new Vector2(0, -getTileTopOffset(tiles[tileCoordinates.X, tileCoordinates.Y]).Y);
+                        //the worldposition
+                        Vector2 position = (getTilePosition(coordinates) - textureOrigin - tileTopOffset) * scale;
+                        //the rectangle of the tile
+                        Rectangle tileRect = new Rectangle((int)position.X, (int)position.Y, (int)(tileSize.X * scale), (int)((tileSize.Y + tileTopOffset.Y) * scale));
+                        //test if the 
+                        if (transformedScreen.Intersects(tileRect))
                         {
+                            //create a queue to save the overlays for the specific tile
                             Queue<TileOverlay> tileOverlays = new Queue<TileOverlay>();
 
+                            //look for overlays which could be the overlay for the coordinate
                             while (sortedOverlays.Count > 0 && drawingOrderComparer.Compare(sortedOverlays.Peek().Position, coordinates) <= 0)
                             {
+                                //take the first overlay
                                 TileOverlay overlay = sortedOverlays.Dequeue();
+                                //discard the overlay if the position isn't the same
                                 if (overlay.Position == coordinates)
+                                {
+                                    //add it to the queue otherwise
                                     tileOverlays.Enqueue(overlay);
+                                }
                             }
-                            drawingTiles.Enqueue(new TilePosition(tiles[t_x, t_y], coordinates, tileOverlays));
+                            //add the tile to the drawing queue with its overlays and coordinates
+                            drawingTiles.Enqueue(new TileDrawingData(tiles[tileCoordinates.X, tileCoordinates.Y], coordinates, tileOverlays));
                         }
                     }
                 }
             }
-            
+
+            // draw all tiles in the drawing queue
             while (drawingTiles.Count > 0)
             {
-                TilePosition tilePosition = drawingTiles.Dequeue();
+                // take the first tile
+                TileDrawingData tilePosition = drawingTiles.Dequeue();
 
-                drawTile(spriteBatch, tilePosition.tile, tilePosition.position);
+                //draw the tile
+                drawTile(spriteBatch, tilePosition.tile, tilePosition.coordinates);
 
+                // draw all overlays of that tile
                 while (tilePosition.overlays.Count > 0)
                 {
+                    // take the first overlay
                     TileOverlay overlay = tilePosition.overlays.Dequeue();
-                    spriteBatch.Draw(overlay.Texture, getTilePosition(tilePosition.position) + getTileTopOffset(tilePosition.tile), null, overlay.Color, 0, overlay.Origin, 1f, SpriteEffects.None, 0);
+                    //draw the overlay
+                    spriteBatch.Draw(overlay.Texture, getTilePosition(tilePosition.coordinates) + getTileTopOffset(tilePosition.tile), null, overlay.Color, 0, overlay.Origin, 1f, SpriteEffects.None, 0);
                 }
             }
         }
@@ -258,15 +296,24 @@ namespace Isometric.TEngine
         /// <param name="indices">the world coordinates of the tile</param>
         public void drawTile(SpriteBatch spriteBatch, Tile tile, Point coordinates)
         {
+            // the current position of te tile
             Vector2 pos = getTilePosition(coordinates);
 
+            // iterate through every stacked tiles
             foreach (int index in tile.Indices)
             {
+                // draw the tile
                 spriteBatch.Draw(tileTypeTextures[tile.TypeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
-                pos.Y -= stackingTileOffset;
+                //set the position to the position of the next tile
+                pos += stackingTileOffset;
             }
         }
 
+        /// <summary>
+        /// gets the world position according the given coordinates
+        /// </summary>
+        /// <param name="coordinates">the coordinate you want the position from</param>
+        /// <returns>the world position of the coordinates</returns>
         public Vector2 getTilePosition(Point coordinates)
         {
             return coordinates.X * tileOffset_X + coordinates.Y * tileOffset_Y;
@@ -279,7 +326,7 @@ namespace Isometric.TEngine
         /// <returns>the offset from the top relatively to the origin</returns>
         public Vector2 getTileTopOffset(Tile tile)
         {
-            return -Vector2.UnitY * stackingTileOffset * (tile.Indices.Count - 1);
+            return stackingTileOffset * (tile.Indices.Count - 1);
         }
 
         /// <summary>
