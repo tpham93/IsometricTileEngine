@@ -14,6 +14,16 @@ namespace Isometric.TEngine
          ***************************************************************************************************/
 
         /// <summary>
+        /// the size of the map
+        /// </summary>
+        private Point mapSize;
+
+        /// <summary>
+        /// the maximum of the x axis and y axis length
+        /// </summary>
+        private int maxSize;
+
+        /// <summary>
         /// the tiles managed by the engine
         /// </summary>
         private Tile[,] tiles;
@@ -50,8 +60,6 @@ namespace Isometric.TEngine
         private Vector2 stackingTileOffset;
 
 
-
-
         /***************************************************************************************************
          *  properties
          ***************************************************************************************************/
@@ -77,7 +85,7 @@ namespace Isometric.TEngine
         /// </summary>
         public Point MapSize
         {
-            get { return new Point(tiles.GetUpperBound(0) + 1, tiles.GetUpperBound(1) + 1); }
+            get { return mapSize; }
         }
 
 
@@ -104,6 +112,8 @@ namespace Isometric.TEngine
         /// <param name="defaultTypeIndex">the index used for initialization of the tiles</param>
         public TileEngine(Point dimension, int standartType)
         {
+            mapSize = dimension;
+            maxSize = Math.Max(mapSize.X,mapSize.Y);
             tiles = new Tile[dimension.X, dimension.Y];
             for (int x = 0; x < dimension.X; ++x)
             {
@@ -215,9 +225,6 @@ namespace Isometric.TEngine
                 //sort the queue with the drawingOrderComparer
                 sortedOverlays = new Queue<TileOverlay>(sortedOverlays.OrderBy(overlay => overlay.Position, drawingOrderComparer));
             }
-            
-            // the maximum for x and y
-            int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
 
             // a queue to save the tiles in the right order with their information
             Queue<TileDrawingData> drawingTiles = new Queue<TileDrawingData>(maxSize * maxSize);
@@ -236,7 +243,7 @@ namespace Isometric.TEngine
                     Point tileCoordinates = getRotatedCoordinates(coordinates, inverseRotation(rotation));
 
                     //see if the tile is within the world
-                    if (tileCoordinates.X >= 0 && tileCoordinates.Y >= 0 && tileCoordinates.X <= tiles.GetUpperBound(0) && tileCoordinates.Y <= tiles.GetUpperBound(1))
+                    if (tileCoordinates.X >= 0 && tileCoordinates.Y >= 0 && tileCoordinates.X < mapSize.X && tileCoordinates.Y < mapSize.Y)
                     {
                         //the offset between the lowest and he highest stacked tile
                         Vector2 tileTopOffset = new Vector2(0, -getTileTopOffset(tiles[tileCoordinates.X, tileCoordinates.Y]).Y);
@@ -296,14 +303,16 @@ namespace Isometric.TEngine
         /// <param name="indices">the world coordinates of the tile</param>
         public void drawTile(SpriteBatch spriteBatch, Tile tile, Point coordinates)
         {
-            // the current position of te tile
+            // the current position of the tile
             Vector2 pos = getTilePosition(coordinates);
+            List<int> indices = tile.Indices;
+
 
             // iterate through every stacked tiles
-            foreach (int index in tile.Indices)
+            for(int i=0;i<tile.Indices.Count;++i)
             {
                 // draw the tile
-                spriteBatch.Draw(tileTypeTextures[tile.TypeIndex][index], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
+                spriteBatch.Draw(tileTypeTextures[tile.TypeIndex][indices[i]], pos, null, Color.White, 0f, textureOrigin, 1, SpriteEffects.None, 0f);
                 //set the position to the position of the next tile
                 pos += stackingTileOffset;
             }
@@ -349,31 +358,23 @@ namespace Isometric.TEngine
         /// <returns>a rotated coordinate</returns>
         public Point getRotatedCoordinates(Point coordinates, Rotation rotation)
         {
-            Point output = new Point();
-            int maxSize = Math.Max(tiles.GetUpperBound(0), tiles.GetUpperBound(1));
             switch (rotation)
             {
                 case Rotation._0_DEGREE:
-                    output.X = coordinates.X;
-                    output.Y = coordinates.Y;
-                    break;
-                case Rotation._90_DEGREE:
-                    output.X = coordinates.Y;
-                    output.Y = maxSize - coordinates.X;
-                    break;
-                case Rotation._180_DEGREE:
-                    output.X = maxSize - coordinates.X;
-                    output.Y = maxSize - coordinates.Y;
-                    break;
-                case Rotation._270_DEGREE:
-                    output.X = maxSize - coordinates.Y;
-                    output.Y = coordinates.X;
-                    break;
-                default:
-                    break;
-            }
+                    return coordinates;
 
-            return output;
+                case Rotation._90_DEGREE:
+                    return new Point(coordinates.Y, maxSize - coordinates.X);
+
+                case Rotation._180_DEGREE:
+                    return new Point(maxSize - coordinates.X, maxSize - coordinates.Y);
+
+                case Rotation._270_DEGREE:
+                    return new Point(maxSize - coordinates.Y, coordinates.X);
+
+                default:
+                    return Point.Zero;
+            }
         }
 
         /// <summary>
